@@ -6,16 +6,16 @@ Decidim.configure do |config|
   config.mailer_sender = "OSP Agora <ne-pas-repondre@opensourcepolitics.eu>"
 
   # Change these lines to set your preferred locales
-  config.default_locale = :fr
-  config.available_locales = [:en, :fr]
+  config.default_locale = :en
+  config.available_locales = [:en, :es]
 
   config.maximum_attachment_height_or_width = 6000
 
   # Geocoder configuration
   if !Rails.application.secrets.geocoder[:here_api_key].blank?
     config.geocoder = {
-        static_map_url: "https://image.maps.ls.hereapi.com/mia/1.6/mapview",
-        here_api_key: Rails.application.secrets.geocoder[:here_api_key]
+      static_map_url: "https://image.maps.ls.hereapi.com/mia/1.6/mapview",
+      here_api_key: Rails.application.secrets.geocoder[:here_api_key]
     }
   end
 
@@ -24,7 +24,7 @@ Decidim.configure do |config|
     Decidim::Initiatives.minimum_committee_members = 1
     Decidim::Initiatives.do_not_require_authorization = true
     Decidim::Initiatives.print_enabled = false
-    Decidim::Initiatives.face_to_face_voting_allowed = false
+    # Decidim::Initiatives.face_to_face_voting_allowed = false
   end
 
 
@@ -35,7 +35,7 @@ Decidim.configure do |config|
   # end
 
   # Currency unit
-  # config.currency_unit = "€"
+  config.currency_unit = "$"
 
   # The number of reports which an object can receive before hiding it
   # config.max_reports_before_hiding = 3
@@ -86,9 +86,9 @@ Decidim.configure do |config|
 
   if !Rails.application.secrets.etherpad[:server].blank?
     config.etherpad = {
-        server: Rails.application.secrets.etherpad[:server],
-        api_key: Rails.application.secrets.etherpad[:api_key],
-        api_version: Rails.application.secrets.etherpad[:api_version]
+      server: Rails.application.secrets.etherpad[:server],
+      api_key: Rails.application.secrets.etherpad[:api_key],
+      api_version: Rails.application.secrets.etherpad[:api_version]
     }
   end
 
