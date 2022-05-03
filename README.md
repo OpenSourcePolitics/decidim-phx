@@ -1,16 +1,50 @@
-# OSP App
+# Decidim app by OSP
 
 Citizen Participation and Open Government application.
 
-This is a base app for all OSP projects. It uses OSP's decidim version.
+## Deploy with Terraform
 
-## Deploying the app
+Terraform is an open-source infrastructure as code software tool that provides an easy deployment of your infrastructure for installing Decidim.
 
-* heroku run rake db:migrate
-* Set SEED=1 as ENV variable
-* heroku run rake db:seed --app osp-decidim
-* See (Setting up the application .3)
+Many providers are available (**AWS**, **Heroku**, **DigitalOcean**...). Check the [Terraform registry to see how to use Terraform with your provider](https://registry.terraform.io/browse/providers)
 
+Each Terraform deployment are stored in the **deploy** folder and sorted by providers
+
+Feel free to add new deployments!
+
+## Availables deployments 
+
+- [Scaleway](https://github.com/OpenSourcePolitics/decidim-app/tree/develop/deploy/providers/scaleway)
+- [DigitalOcean](https://github.com/OpenSourcePolitics/decidim-app/tree/develop/deploy/providers/digitalocean/)
+
+## Environment variables
+
+Each provider will need a way to authenticate at their API. Make sure to set environment variables asked in the provider's documentation before using deployments.
+
+- To use Scaleway's provider
+
+```bash
+export SCW_ACCESS_KEY=<your_access_key>
+export SCW_TOKEN=<your_scw_token>
+export SCW_DEFAULT_PROJECT_ID=<id_of_your_project/organization>
+```
+
+- To use DigitalOcean's provider
+```bash
+export DIGITALOCEAN_TOKEN=<your_do_token>
+export SPACES_ACCESS_KEY_ID=<your_do_space_access_key>
+export SPACES_SECRET_ACCESS_KEY=<your_do_space_secret_key>
+```
+
+## How to deploy with Terraform?
+
+Check the list of make commands in the Makefile. Each command corresponds to a provider and a specific need.
+
+- To deploy a new infrastructure with Scaleway
+
+```make
+make deploy-scw
+```
 
 ## Setting up the application
 
@@ -19,7 +53,9 @@ You will need to do some steps before having the app working properly once you'v
 1. Open a Rails console in the server: `bundle exec rails console`
 2. Create a System Admin user:
 ```ruby
-user = Decidim::System::Admin.new(email: <email>, password: <password>, password_confirmation: <password>)
+email = <your email>
+password = <a secure password>
+user = Decidim::System::Admin.new(email: email, password: password, password_confirmation: password)
 user.save!
 ```
 3. Visit `<your app url>/system` and login with your system admin credentials
@@ -29,12 +65,73 @@ user.save!
 
 You're good to go!
 
-### How to deploy
+## Running tests
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+This application has a functional testing suite. You can easily run locally the tests as following :
 
-1. Use the "Deploy to Heroku" button
-1. Choose a name for the app, and organization and a tier
-1. Fill in the required env vars.
-1. Create the app
-1. Enable Review Apps for this app (you'll need to create a Pipeline)
+Create test environment database 
+
+`bundle exec rake test:setup`
+
+And then run tests using `rspec`
+
+`bundle exec rspec spec/`
+
+## Docker
+### How to use it? 
+You can boot a Decidim environment in Docker using the Makefile taht will run docker-compose commands and the last built image from the Dockerfile.
+Three context are available : 
+
+- **Clean Decidim**
+
+An environment running the current Decidim version (from Gemfile) without any data.
+```make
+make start-clean-decidim
+```
+
+- **Seeded Decidim**
+
+An environment running the current Decidim version (from Gemfile) with generated seeds
+```make
+make start-seeded-decidim
+```
+
+- **Dumped Decidim**
+
+An environment running the current Decidim version (from Gemfile) with real data dumped from an existing platform to simulate a Decidim bump version before doing in the real production environment.
+```make
+make start-dumped-decidim
+```
+***Warning : you need to get a psql dump on your local machine to restore it in your containerized database***
+***Warning2 : you need to set organization host to 0.0.0.0 with the rails console***
+
+
+### How to stop and remove it? 
+
+To get rid off your Docker environmnent : 
+
+- Shut down Docker environmnent
+```make
+make stop
+```
+
+- Delete resources
+```make
+make delete
+```
+### Troubleshooting
+
+Make commands are available to help you troubleshoot your Docker environment
+
+- Start Rails console
+ ```make
+make rails-console
+```
+- Start bash session to app container
+```make
+make connect-app
+```
+
+## Database architecture (ERD)
+
+![Architecture_decidim](https://user-images.githubusercontent.com/52420208/133789299-9458fc42-a5e7-4e3d-a934-b55c6afbc8aa.jpg)

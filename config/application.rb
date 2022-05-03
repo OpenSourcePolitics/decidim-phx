@@ -1,6 +1,8 @@
-require_relative 'boot'
+# frozen_string_literal: true
 
-require 'rails/all'
+require_relative "boot"
+
+require "rails/all"
 
 # TODO : add missing dep to decidim-initiatives/lib/decidim/initiatives/engine.rb
 # require "wicked_pdf"
@@ -18,7 +20,9 @@ module DevelopmentApp
 
     # This needs to be set for correct images URLs in emails
     # DON'T FORGET to ALSO set this in `config/initializers/carrierwave.rb`
-    # config.action_mailer.asset_host = "https://your.server.url"
+    config.action_mailer.asset_host = "https://#{Rails.application.secrets[:asset_host]}/" if Rails.application.secrets[:asset_host].present?
+
+    config.backup = config_for(:backup).deep_symbolize_keys
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers

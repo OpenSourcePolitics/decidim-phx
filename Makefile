@@ -1,63 +1,83 @@
-migration:
-	docker-compose run app "rails db:migrate"
+#### Terraform | Scaleway provider
+init-scw:
+	terraform -chdir=deploy/providers/scaleway init
 
-upgrade:
-	docker-compose run app "rake decidim:upgrade"
+plan-scw:
+	@make init-scw
+	terraform -chdir=deploy/providers/scaleway plan	
+	
+deploy-scw:
+	@make init-scw
+	terraform -chdir=deploy/providers/scaleway apply
 
-create:
-	docker-compose run app "rake db:create"
+destroy-scw:
+	terraform -chdir=deploy/providers/scaleway destroy
 
-up:
+### Docker usage
+
+# Docker images commands
+
+REGISTRY := rg.fr-par.scw.cloud
+NAMESPACE := decidim-app
+VERSION := latest
+IMAGE_NAME := decidim-app
+TAG := $(REGISTRY)/$(NAMESPACE)/$(IMAGE_NAME):$(VERSION)
+
+login:
+	docker login $(REGISTRY) -u nologin -p $(SCW_SECRET_TOKEN)
+
+build-classic:
+	docker build -t $(IMAGE_NAME):$(VERSION) .
+build-scw:
+	docker build -t $(TAG) .
+push:
+	@make build-scw
+	@make login
+	docker push $(TAG)
+pull:
+	@make build-scw
+	docker pull $(TAG)
+
+# Bundle commands
+create-database:
+	docker-compose run app bundle exec rails db:create
+run-migrations:
+	docker-compose run app bundle exec rails db:migrate
+create-seeds:
+	docker-compose run app bundle exec rails db:seed
+
+# Database commands 
+restore-dump:
+	bundle exec rake restore_dump 
+
+# Start commands seperated by context
+start:
 	docker-compose up
 
-prod:
-	docker-compose -f docker-compose.prod.yml up
+start-dumped-decidim:
+	@make create-database
+	@make -i restore-dump
+	@make run-migrations
+	@make start
+start-seeded-decidim:
+	@make create-database
+	@make run-migrations
+	@make create-seeds
+	@make start
+start-clean-decidim:
+	@make create-database
+	@make run-migrations
+	@make start
 
-build:
-	docker-compose build --compress --parallel
+# Utils commands
+rails-console:
+	docker exec -it decidim-app_app_1 rails c
+connect-app:
+	docker exec -it decidim-app_app_1 bash
 
-drop:
-	docker-compose run app "rake db:drop"
-
-setup:
-	docker-compose run app "rake db:create db:migrate"
-
-seed:
-	docker-compose run app "SEED=true rake db:seed"
-
-precompile:
-	docker-compose run app "RAILS_ENV=production rails assets:precompile"
-
-cache:
-	docker-compose run app "rails tmp:cache:clear assets:clobber"
-
-ssh:
-	docker-compose run app /bin/bash
-
-local-bundle:
-	bundle install
-
-stop-all:
-	 docker stop $$(docker ps -q -a)
-
-prune:
-	@make stop-all
+# Stop and delete commands
+stop:
+	docker-compose down
+delete:
+	@make stop
 	docker volume prune
-
-bump:
-	@make local-bundle
-	@make build
-	@make upgrade
-	@make migration
-	@make cache
-	@make precompile
-	@make prod
-
-init:
-	@make create
-	@make migration
-	@make upgrade
-	@make seed
-
-build-no-cache:
-	docker-compose build --no-cache
